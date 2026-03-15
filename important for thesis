@@ -1,0 +1,59 @@
+No external library at all — it's the browser's built-in Web Geolocation API, which is part of standard HTML5 and available in every modern browser with zero imports.
+
+Just one native call:
+
+javascript
+navigator.geolocation.watchPosition(onGpsUpdate, onGpsError, options)
+That's it. The browser handles everything — asking for permission, getting the fix from WiFi/cell tower triangulation or GPS hardware, and pushing updates. Nothing to install, no API key, no CDN link.
+
+Then for the road data — OpenStreetMap via Overpass API:
+
+javascript
+fetch('https://overpass-api.de/api/interpreter', {
+  method: 'POST',
+  body: 'data=' + encodeURIComponent(query)
+})
+Again no library — just a plain fetch() call to a free public server. OpenStreetMap is the open-source alternative to Google Maps, and Overpass is its query API. No account, no API key, completely free for reasonable use. The query returns JSON describing every road, school, playground, crossing within the radius you specify.
+
+So the entire road context AI feature is:
+
+Web Geolocation API — built into the browser, zero setup
+Overpass API — free public HTTP endpoint, zero setup
+speechSynthesis — also built into the browser, zero setup
+No npm, no Python, no server, no keys. That is why it was so easy to add — everything was already available in the browser you were already using.
+
+and for voice command which api?
+
+02:48
+Same story — no external API, everything built into the browser.
+
+Web Speech API — two parts, both native:
+
+javascript
+// Speech recognition (microphone → text)
+const rec = new SpeechRecognition() // or webkitSpeechRecognition in Chrome
+rec.lang = 'en-US'
+rec.onresult = e => console.log(e.results[0][0].transcript)
+rec.start()
+
+// Speech synthesis (text → voice)
+speechSynthesis.speak(new SpeechSynthesisUtterance('Hello'))
+That is literally everything. No API key, no server, no account.
+
+How it actually works under the hood — this is worth knowing for your thesis:
+
+For recognition, Chrome does send your audio to Google's servers to transcribe it. It is not fully on-device. That is why it requires internet and why it occasionally fails offline. Firefox uses a different backend.
+
+For synthesis, the voices come from your operating system — Windows uses Microsoft voices, macOS uses Apple voices (Samantha, Daniel etc.), which is why the voice sounds different on different computers. Fully offline.
+
+Why this matters for your thesis
+
+You are using three browser-native APIs with zero dependencies:
+
+Feature	API	On-device?
+Voice recognition	Web Speech API	No — audio sent to Google
+Voice synthesis	Web Speech API	Yes — OS voices
+GPS location	Web Geolocation API	Yes — WiFi triangulation
+Road data	Overpass / OSM	No — HTTP query
+Serial to knob	Web Serial API	Yes — direct USB
+The Web Serial API is actually the most novel one for automotive HMI research — direct browser-to-hardware communication without any driver or middleware, which is what makes your knob and laptop screen stay perfectly synchronised. That is genuinely worth highlighting in the thesis as it is a recent Chrome addition (2021) and most HMI research still assumes a backend server in between.
